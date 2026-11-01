@@ -87,15 +87,26 @@ generador al crear las llaves.
 
 ## Guía de Instalación
 
+### Despliegue en un comando
+
+La imagen es pública: `ghcr.io/smartpottech/smartpot-broker`. La plataforma completa, con este servicio incluido, se
+levanta con un solo comando y sin descargar el código:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/SmartPotTech/.github/main/docker/demo/compose.yaml | docker compose -f - up -d --wait
+```
+
+Abre http://localhost:5173 e ingresa con `demo@smartpot.app` / `SmartPot2026`. Se detiene con
+`docker compose -p smartpot-demo down` (con `-v` borra también los datos). Más detalle en la
+[demo](https://github.com/SmartPotTech/.github/tree/main/docker/demo).
+
 ### Requisitos Previos
 
 - Docker (Docker Desktop o Docker Engine con Compose v2)
 
-### Ejecución con Docker Compose
+### Desde el código con Docker Compose
 
 ```bash
-git clone https://github.com/SmartPotTech/SmartPot-Broker.git
-cd SmartPot-Broker
 cp .env.example .env    # define MQTT_ADMIN_PASSWORD (mínimo 16 caracteres)
 docker compose up -d
 ```
