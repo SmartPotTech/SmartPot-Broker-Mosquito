@@ -1,9 +1,14 @@
-# SmartPot-Broker (MQTT)
+# SmartPot-Broker-Mosquito (Deprecated / Deprecado)
+
+> [!WARNING]
+> **Deprecated / Deprecado (Legacy Stack A)**  
+> **English:** This repository contains the legacy Stack A (v1.0) MQTT broker implementation based on Eclipse Mosquitto 2.1 with dynamic-security.json. It has been **deprecated and superseded in production** by the canonical modern Stack B broker: [**`SmartPot-Broker`**](https://github.com/SmartPotTech/SmartPot-Broker) (EMQX 5.8 with HTTP authn delegation). Preserved solely for historical reference.  
+> **Español:** Este repositorio contiene la implementación legada del Stack A (v1.0) del broker MQTT basada en Eclipse Mosquitto 2.1 con seguridad dinámica. Ha sido **deprecada y sustituida en producción** por el broker canónico del Stack B: [**`SmartPot-Broker`**](https://github.com/SmartPotTech/SmartPot-Broker) (EMQX 5.8 con autenticación delegada por HTTP). Conservada exclusivamente como referencia histórica.
 
 ## Estado del Proyecto
 
-[![Broker Image CI](https://github.com/SmartPotTech/SmartPot-Broker/actions/workflows/ci.yml/badge.svg)](https://github.com/SmartPotTech/SmartPot-Broker/actions/workflows/ci.yml)
-[![Publish Docker Images](https://github.com/SmartPotTech/SmartPot-Broker/actions/workflows/packaging.yml/badge.svg)](https://github.com/SmartPotTech/SmartPot-Broker/actions/workflows/packaging.yml)
+[![Broker Image CI](https://github.com/SmartPotTech/SmartPot-Broker-Mosquito/actions/workflows/ci.yml/badge.svg)](https://github.com/SmartPotTech/SmartPot-Broker-Mosquito/actions/workflows/ci.yml)
+[![Publish Docker Images](https://github.com/SmartPotTech/SmartPot-Broker-Mosquito/actions/workflows/packaging.yml/badge.svg)](https://github.com/SmartPotTech/SmartPot-Broker-Mosquito/actions/workflows/packaging.yml)
 
 ## Descripción
 

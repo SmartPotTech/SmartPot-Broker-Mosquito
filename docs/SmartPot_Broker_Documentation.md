@@ -10,7 +10,10 @@ equipo: SmartPotTech
 proyecto: smartpot.app
 -->
 
-# SmartPot-Broker
+# SmartPot-Broker-Mosquito (Deprecado)
+
+> [!WARNING]
+> **Componente Legado (Stack A)**: Este componente ha sido reemplazado en producción por el broker MQTT canónico en EMQX 5.8 ([`SmartPot-Broker`](https://github.com/SmartPotTech/SmartPot-Broker)). Este documento describe la implementación original en Eclipse Mosquitto 2.1 como registro histórico.
 
 ## Ficha del documento
 
