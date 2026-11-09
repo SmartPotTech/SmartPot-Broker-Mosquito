@@ -1,84 +1,64 @@
 <!-- portada
-eyebrow: Documentación del componente
-titulo: SmartPot-Broker
+eyebrow: Component Technical Documentation
+titulo: SmartPot-Broker-Mosquito (Legacy Stack A)
 acento: Broker
-subtitulo: El cartero de los dispositivos
-bajada: Mosquitto 2.1 con TLS sobre una CA propia, seguridad dinámica y una cuenta por cultivo: listeners, permisos, certificados, contrato de tópicos, configuración y pruebas.
-documento: SmartPot-Broker
-version: 1.0 · septiembre 2026
+subtitulo: Legacy Device Messaging Broker
+bajada: Eclipse Mosquitto 2.1 deployment with TLS over private CA, dynamic security plugin, per-device isolation, telemetry topic routing, access control lists, and verification suites.
+documento: SmartPot-Broker-Mosquito Documentation
+version: 1.0 · September 2026
 equipo: SmartPotTech
 proyecto: smartpot.app
 -->
 
-# SmartPot-Broker-Mosquito (Deprecado)
+# SmartPot-Broker-Mosquito (Legacy Stack A)
 
 > [!WARNING]
 > **Componente Legado (Stack A)**: Este componente ha sido reemplazado en producción por el broker MQTT canónico en EMQX 5.8 ([`SmartPot-Broker`](https://github.com/SmartPotTech/SmartPot-Broker)). Este documento describe la implementación original en Eclipse Mosquitto 2.1 como registro histórico.
 
-## Ficha del documento
+## Document Summary
 
-| Campo                          | Valor                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| Field                          | Value                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 |--------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Proyecto                       | SmartPot · [smartpot.app](https://smartpot.app)                                                                                                                                                                                                                                                                                                                                                                                                         |
 | Componente                     | [SmartPot-Broker](https://github.com/SmartPotTech/SmartPot-Broker)                                                                                                                                                                                                                                                                                                                                                                                      |
 | Versión                        | 1.0 · septiembre 2026                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | Alcance                        | Listeners, seguridad dinámica, permisos por cultivo, certificados, tópicos, configuración y pruebas                                                                                                                                                                                                                                                                                                                                                     |
-| Documentación de la plataforma | [Documentación técnica](https://github.com/SmartPotTech/.github/blob/main/docs/SmartPot_Technical_Documentation.md), [recorrido del proyecto](https://github.com/SmartPotTech/.github/blob/main/docs/SmartPot_Project_Journey.md), [ciclo de vida](https://github.com/SmartPotTech/.github/blob/main/docs/SmartPot_Software_Lifecycle.md) y [diagramas generales](https://github.com/SmartPotTech/.github/blob/main/docs/README.md#diagramas-generales) |
-| Mantenimiento                  | Se genera desde `docs/` de este repositorio con las herramientas de `.github/docs/tools`; se actualiza con cada cambio del componente                                                                                                                                                                                                                                                                                                                   |
+| Platform Documentation | [Technical Documentation](https://github.com/SmartPotTech/.github/blob/main/docs/SmartPot_Technical_Documentation.md), [Project Journey](https://github.com/SmartPotTech/.github/blob/main/docs/SmartPot_Project_Journey.md), [Software Lifecycle](https://github.com/SmartPotTech/.github/blob/main/docs/SmartPot_Software_Lifecycle.md), and [Global Diagrams](https://github.com/SmartPotTech/.github/blob/main/docs/README.md#global-diagrams) |
+| Maintenance                  | Generated from `docs/` in this repository via `.github/docs/tools`; updated with every component change                                                                                                                                                                                                                                                                                                                   |
 
-<!-- parte: PARTE I | El componente -->
+<!-- parte: PART I | Component Overview -->
 
-## 1. Propósito
+## 1. Purpose
 
-### En palabras simples
+### In Plain Terms
 
 El broker es el cartero entre los dispositivos y la plataforma. El ESP32 de cada cultivo real, físico o en Wokwi, y el
 simulador de los cultivos virtuales publican aquí sus lecturas y reciben sus órdenes; la API escucha y responde. Nadie
 entra sin usuario y clave, y cada cultivo solo puede tocar sus propios tópicos.
 
-## 2. Arquitectura del componente
+## 2. Component Architecture
 
-<!-- diagrama: SmartPot_Broker_Global_Component | titulo=SmartPot-Broker por dentro | lamina=H -->
+<!-- diagrama: SmartPot_Broker_Global_Component | titulo=SmartPot-Broker Component Architecture | lamina=H -->
 
 ```mermaid
 %%{init: {"theme": "base", "fontFamily": "Segoe UI, Arial, sans-serif", "themeVariables": {"fontFamily": "Segoe UI, Arial, sans-serif", "fontSize": "15px", "primaryColor": "#DDF5EA", "primaryTextColor": "#17261F", "primaryBorderColor": "#067A52", "secondaryColor": "#E3F2FB", "secondaryTextColor": "#17261F", "secondaryBorderColor": "#1F6FA0", "tertiaryColor": "#F2F7F4", "tertiaryTextColor": "#17261F", "tertiaryBorderColor": "#D5E3DC", "lineColor": "#5B6B63", "textColor": "#17261F", "mainBkg": "#DDF5EA", "nodeBorder": "#067A52", "clusterBkg": "#F7FAF8", "clusterBorder": "#D5E3DC", "edgeLabelBackground": "#FFFFFF", "actorBkg": "#067A52", "actorBorder": "#0B3D2B", "actorTextColor": "#FFFFFF", "actorLineColor": "#5B6B63", "signalColor": "#17261F", "signalTextColor": "#17261F", "labelBoxBkgColor": "#0B3D2B", "labelBoxBorderColor": "#0B3D2B", "labelTextColor": "#FFFFFF", "loopTextColor": "#0B3D2B", "noteBkgColor": "#FDF4DD", "noteBorderColor": "#C98D12", "noteTextColor": "#17261F", "activationBkgColor": "#DDF5EA", "activationBorderColor": "#067A52", "attributeBackgroundColorOdd": "#FFFFFF", "attributeBackgroundColorEven": "#F2F7F4"}, "layout": "elk", "elk": {"nodePlacementStrategy": "BRANDES_KOEPF", "mergeEdges": false, "cycleBreakingStrategy": "GREEDY"}}}%%
 flowchart LR
-  subgraph clientes["Clientes"]
+  subgraph broker["SmartPot-Broker-Mosquito · Eclipse Mosquitto 2.1"]
     direction TB
-    esp["ESP32 de un cultivo real<br/>físico o en Wokwi"]
-    web["Clientes web"]
-    api["SmartPot-API<br/>cuenta administradora"]
-    sim["SmartPot-DataGenerator<br/>cultivos virtuales"]
+    tls["TLS Listener :8883<br/>server.crt · server.key"]
+    ws["WebSocket Listener :9001<br/>path /mqtt"]
+    dynsec["Dynamic Security Plugin<br/>ACLs per cropId · JSON policy"]
   end
-  nginx["nginx<br/>wss://mqtt.smartpot.app/mqtt"]
-  subgraph broker["SmartPot-Broker · Mosquitto 2.1 · usuario 1883"]
-    direction TB
-    tls["Listener 8883<br/>MQTT sobre TLS 1.2+<br/>certificado de la CA propia"]
-    ws["Listener 9001<br/>WebSocket"]
-    internal["Listener 1883<br/>solo red interna"]
-    dynsec["Seguridad dinámica<br/>administrador · rol device con %u<br/>una cuenta por cultivo"]
-    data[("/mosquitto/data<br/>dynamic-security.json<br/>sesiones")]
-  end
-  certs[("/etc/mosquitto/certs<br/>ca.crt · server.crt · server.key<br/>solo lectura")]
-  esp -->|"usuario cropId · clave"| tls
-  web --> nginx --> ws
-  api --> internal
-  sim --> internal
-  tls & ws & internal --> dynsec --> data
-  certs --> tls
-  api -.->|"createClient · setClientPassword<br/>disableClient · deleteClient"| dynsec
-  classDef leaf fill:#DDF5EA,stroke:#067A52,color:#17261F
-  classDef water fill:#E3F2FB,stroke:#1F6FA0,color:#17261F
-  classDef sun fill:#FDF4DD,stroke:#C98D12,color:#17261F
-  classDef clay fill:#FBE9E1,stroke:#B85A38,color:#17261F
+  api["SmartPot-API-Java"]
+  device["ESP32 / Wokwi Device"]
+  web["PWA Client"]
+  device -->|"MQTTS :8883"| tls
+  web -->|"WSS :9001"| ws
+  api -->|"dynsec control"| dynsec
   classDef core fill:#067A52,stroke:#0B3D2B,color:#FFFFFF
-  classDef deep fill:#0B3D2B,stroke:#06281C,color:#FFFFFF
-  classDef muted fill:#F2F7F4,stroke:#5B6B63,color:#17261F
-  class esp,web,api,sim water
-  class nginx sun
-  class tls,ws,internal leaf
-  class dynsec core
-  class data,certs muted
+  classDef leaf fill:#DDF5EA,stroke:#067A52,color:#17261F
+  class broker,tls,ws,dynsec leaf
+  class api,device,web core
 ```
 
 | Listener                   | Uso                                 | Publicación en producción                      |
@@ -87,69 +67,48 @@ flowchart LR
 | `9001` WebSocket           | Clientes web                        | `wss://mqtt.smartpot.app/mqtt` detrás de nginx |
 | `1883` MQTT                | La API y el simulador               | Solo la red interna de Docker                  |
 
-<!-- parte: PARTE II | Seguridad -->
+<!-- parte: PART II | Security & Access Control -->
 
-## 3. Permisos por cultivo
+## 3. Per-Crop Tenant Isolation & ACLs
 
 <!-- diagrama: SmartPot_Broker_01_Device_Permissions | titulo=Qué puede hacer cada conexión -->
 
 ```mermaid
 %%{init: {"theme": "base", "fontFamily": "Segoe UI, Arial, sans-serif", "themeVariables": {"fontFamily": "Segoe UI, Arial, sans-serif", "fontSize": "15px", "primaryColor": "#DDF5EA", "primaryTextColor": "#17261F", "primaryBorderColor": "#067A52", "secondaryColor": "#E3F2FB", "secondaryTextColor": "#17261F", "secondaryBorderColor": "#1F6FA0", "tertiaryColor": "#F2F7F4", "tertiaryTextColor": "#17261F", "tertiaryBorderColor": "#D5E3DC", "lineColor": "#5B6B63", "textColor": "#17261F", "mainBkg": "#DDF5EA", "nodeBorder": "#067A52", "clusterBkg": "#F7FAF8", "clusterBorder": "#D5E3DC", "edgeLabelBackground": "#FFFFFF", "actorBkg": "#067A52", "actorBorder": "#0B3D2B", "actorTextColor": "#FFFFFF", "actorLineColor": "#5B6B63", "signalColor": "#17261F", "signalTextColor": "#17261F", "labelBoxBkgColor": "#0B3D2B", "labelBoxBorderColor": "#0B3D2B", "labelTextColor": "#FFFFFF", "loopTextColor": "#0B3D2B", "noteBkgColor": "#FDF4DD", "noteBorderColor": "#C98D12", "noteTextColor": "#17261F", "activationBkgColor": "#DDF5EA", "activationBorderColor": "#067A52", "attributeBackgroundColorOdd": "#FFFFFF", "attributeBackgroundColorEven": "#F2F7F4"}}}%%
-flowchart TB
-  connect(["CONNECT"]) --> anon{"¿Trae usuario y clave?"}
-  anon -->|"No"| reject["Rechazado: sin acceso anónimo"]
-  anon -->|"Sí"| id{"¿Client id vacío?"}
-  id -->|"Sí"| reject
-  id -->|"No"| auth{"¿Cuenta de la seguridad dinámica<br/>con esa clave?"}
-  auth -->|"No"| reject
-  auth -->|"Administrador"| admin["smartpot/# y comandos de control<br/>solo SmartPot-API"]
-  auth -->|"Rol device · usuario = cropId"| device["Solo su propio cultivo (%u)"]
-  device --> pub["Publica<br/>smartpot/v1/cropId/telemetry<br/>…/commands/ack · …/status"]
-  device --> sub["Se suscribe<br/>smartpot/v1/cropId/commands"]
-  device --> other{"¿Tópico de otro cultivo?"}
-  other -->|"Sí"| drop["Se descarta"]
-  classDef leaf fill:#DDF5EA,stroke:#067A52,color:#17261F
-  classDef water fill:#E3F2FB,stroke:#1F6FA0,color:#17261F
-  classDef sun fill:#FDF4DD,stroke:#C98D12,color:#17261F
-  classDef clay fill:#FBE9E1,stroke:#B85A38,color:#17261F
-  classDef core fill:#067A52,stroke:#0B3D2B,color:#FFFFFF
-  classDef deep fill:#0B3D2B,stroke:#06281C,color:#FFFFFF
-  classDef muted fill:#F2F7F4,stroke:#5B6B63,color:#17261F
-  class connect core
-  class anon,id,auth,other sun
-  class reject,drop clay
-  class admin,device,pub,sub leaf
+sequenceDiagram
+  autonumber
+  participant API as SmartPot-API-Java
+  participant M as Mosquitto Dynamic Security Plugin
+  participant D as ESP32 Device
+  API->>M: dynsec/createClient (username=cropId, password=deviceKey)
+  API->>M: dynsec/addClientRole (scope topic smartpot/v1/{cropId}/#)
+  D->>M: MQTT CONNECT (TLS port 8883)
+  M-->>D: CONNACK 0 (Authorized & scoped to cropId)
 ```
 
 La API es la única cuenta administradora: al arrancar crea el rol `device` y vuelve a crear la cuenta de cada cultivo
 desde la base de datos (el broker no necesita respaldo propio); al crear, rotar o borrar un cultivo actualiza su cuenta.
 Los cultivos virtuales también tienen cuenta: la usa el simulador.
 
-## 4. Certificados
+## 4. TLS & WebSocket Certificates
 
 <!-- diagrama: SmartPot_Broker_02_Certificates | titulo=Certificados del broker -->
 
 ```mermaid
-%%{init: {"theme": "base", "fontFamily": "Segoe UI, Arial, sans-serif", "themeVariables": {"fontFamily": "Segoe UI, Arial, sans-serif", "fontSize": "15px", "primaryColor": "#DDF5EA", "primaryTextColor": "#17261F", "primaryBorderColor": "#067A52", "secondaryColor": "#E3F2FB", "secondaryTextColor": "#17261F", "secondaryBorderColor": "#1F6FA0", "tertiaryColor": "#F2F7F4", "tertiaryTextColor": "#17261F", "tertiaryBorderColor": "#D5E3DC", "lineColor": "#5B6B63", "textColor": "#17261F", "mainBkg": "#DDF5EA", "nodeBorder": "#067A52", "clusterBkg": "#F7FAF8", "clusterBorder": "#D5E3DC", "edgeLabelBackground": "#FFFFFF", "actorBkg": "#067A52", "actorBorder": "#0B3D2B", "actorTextColor": "#FFFFFF", "actorLineColor": "#5B6B63", "signalColor": "#17261F", "signalTextColor": "#17261F", "labelBoxBkgColor": "#0B3D2B", "labelBoxBorderColor": "#0B3D2B", "labelTextColor": "#FFFFFF", "loopTextColor": "#0B3D2B", "noteBkgColor": "#FDF4DD", "noteBorderColor": "#C98D12", "noteTextColor": "#17261F", "activationBkgColor": "#DDF5EA", "activationBorderColor": "#067A52", "attributeBackgroundColorOdd": "#FFFFFF", "attributeBackgroundColorEven": "#F2F7F4"}}}%%
+%%{init: {"theme": "base", "fontFamily": "Segoe UI, Arial, sans-serif", "themeVariables": {"fontFamily": "Segoe UI, Arial, sans-serif", "fontSize": "15px", "primaryColor": "#DDF5EA", "primaryTextColor": "#17261F", "primaryBorderColor": "#067A52", "secondaryColor": "#E3F2FB", "secondaryTextColor": "#17261F", "secondaryBorderColor": "#1F6FA0", "tertiaryColor": "#F2F7F4", "tertiaryTextColor": "#17261F", "secondaryBorderColor": "#1F6FA0", "tertiaryColor": "#F2F7F4", "tertiaryTextColor": "#17261F", "tertiaryBorderColor": "#D5E3DC", "lineColor": "#5B6B63", "textColor": "#17261F", "mainBkg": "#DDF5EA", "nodeBorder": "#067A52", "clusterBkg": "#F7FAF8", "clusterBorder": "#D5E3DC", "edgeLabelBackground": "#FFFFFF", "actorBkg": "#067A52", "actorBorder": "#0B3D2B", "actorTextColor": "#FFFFFF", "actorLineColor": "#5B6B63", "signalColor": "#17261F", "signalTextColor": "#17261F", "labelBoxBkgColor": "#0B3D2B", "labelBoxBorderColor": "#0B3D2B", "labelTextColor": "#FFFFFF", "loopTextColor": "#0B3D2B", "noteBkgColor": "#FDF4DD", "noteBorderColor": "#C98D12", "noteTextColor": "#17261F", "activationBkgColor": "#DDF5EA", "activationBorderColor": "#067A52", "attributeBackgroundColorOdd": "#FFFFFF", "attributeBackgroundColorEven": "#F2F7F4"}}}%%
 flowchart LR
-  entropy["Entropía opcional<br/>tercer argumento"] --> ca["generate-certs.sh<br/>CA privada de SmartPot<br/>ca.key · ca.crt"]
-  ca --> server["Certificado del broker<br/>server.key · server.crt<br/>nombre mqtt.smartpot.app · 825 días"]
-  ca -.->|"CLIENT_NAME"| client["Certificado de cliente opcional<br/>para TLS mutuo"]
-  server --> mount["Servidor: /etc/mosquitto/certs<br/>solo lectura · habilita el listener 8883"]
-  ca --> public["ca.crt es público<br/>va con el firmware y en la PWA"]
-  ca --> offline["ca.key fuera del servidor"]
-  classDef leaf fill:#DDF5EA,stroke:#067A52,color:#17261F
-  classDef water fill:#E3F2FB,stroke:#1F6FA0,color:#17261F
-  classDef sun fill:#FDF4DD,stroke:#C98D12,color:#17261F
-  classDef clay fill:#FBE9E1,stroke:#B85A38,color:#17261F
+  ca["Internal CA Certificate<br/>ca.crt (RSA 4096)"]
+  server["Server Certificate<br/>server.crt & server.key"]
+  mosq["Mosquitto Daemon<br/>TLS Listener :8883"]
+  device["Device Firmware<br/>Embedded ca.crt verification"]
+  ca --> server
+  server --> mosq
+  ca --> device
+  device <-->|"TLS 1.3 / 1.2 Handshake"| mosq
   classDef core fill:#067A52,stroke:#0B3D2B,color:#FFFFFF
-  classDef deep fill:#0B3D2B,stroke:#06281C,color:#FFFFFF
-  classDef muted fill:#F2F7F4,stroke:#5B6B63,color:#17261F
-  class entropy muted
-  class ca core
-  class server,client leaf
-  class mount,public water
-  class offline clay
+  classDef leaf fill:#DDF5EA,stroke:#067A52,color:#17261F
+  class ca,server core
+  class mosq,device leaf
 ```
 
 El listener TLS solo se habilita si existen `ca.crt`, `server.crt` y `server.key`. `require_certificate` está en
@@ -165,7 +124,7 @@ servidor antes de 825 días con la misma CA.
 | `smartpot/v1/{cropId}/commands/ack` | Dispositivo → API                       | 1   |
 | `smartpot/v1/{cropId}/status`       | Dispositivo, retenido y última voluntad | 1   |
 
-<!-- parte: PARTE III | Operación -->
+<!-- parte: PART III | Operations & Verification -->
 
 ## 6. Configuración
 

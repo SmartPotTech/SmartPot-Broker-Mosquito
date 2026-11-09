@@ -1,27 +1,19 @@
-# SmartPot-Broker-Mosquito (Deprecated / Deprecado)
+# SmartPot-Broker-Mosquito (Legacy Stack A Reference)
 
 > [!WARNING]
-> **Deprecated / Deprecado (Legacy Stack A)**  
-> **English:** This repository contains the legacy Stack A (v1.0) MQTT broker implementation based on Eclipse Mosquitto 2.1 with dynamic-security.json. It has been **deprecated and superseded in production** by the canonical modern Stack B broker: [**`SmartPot-Broker`**](https://github.com/SmartPotTech/SmartPot-Broker) (EMQX 5.8 with HTTP authn delegation). Preserved solely for historical reference.  
-> **Español:** Este repositorio contiene la implementación legada del Stack A (v1.0) del broker MQTT basada en Eclipse Mosquitto 2.1 con seguridad dinámica. Ha sido **deprecada y sustituida en producción** por el broker canónico del Stack B: [**`SmartPot-Broker`**](https://github.com/SmartPotTech/SmartPot-Broker) (EMQX 5.8 con autenticación delegada por HTTP). Conservada exclusivamente como referencia histórica.
+> **Deprecated (Legacy Stack A Reference Implementation)**  
+> This repository contains the legacy Stack A (v1.0) MQTT broker implementation based on Eclipse Mosquitto 2.1 with dynamic-security.json. It has been **deprecated and superseded in production** by the canonical modern Stack B broker: [**`SmartPot-Broker`**](https://github.com/SmartPotTech/SmartPot-Broker) (EMQX 5.8.9 with HTTP authn delegation and dynamic ACL isolation). Preserved solely for historical reference.
 
-## Estado del Proyecto
+## Project Status
 
 [![Broker Image CI](https://github.com/SmartPotTech/SmartPot-Broker-Mosquito/actions/workflows/ci.yml/badge.svg)](https://github.com/SmartPotTech/SmartPot-Broker-Mosquito/actions/workflows/ci.yml)
 [![Publish Docker Images](https://github.com/SmartPotTech/SmartPot-Broker-Mosquito/actions/workflows/packaging.yml/badge.svg)](https://github.com/SmartPotTech/SmartPot-Broker-Mosquito/actions/workflows/packaging.yml)
 
-## Descripción
+## Description
 
-SmartPot-Broker es el **receptor MQTT** de SmartPot: la pieza por la que viajan la telemetría de los cultivos y los
-comandos hacia sus actuadores. Es una imagen de **Eclipse Mosquitto 2.1** con **TLS 1.2 o superior** sobre una CA
-propia, el plugin de **seguridad dinámica**, sin acceso anónimo y con aislamiento por cultivo: cada dispositivo solo
-puede publicar su propia telemetría y solo recibe sus propios comandos.
+SmartPot-Broker-Mosquito provided the MQTT communication backbone for **SmartPot Stack A**: an **Eclipse Mosquitto 2.1** broker with the `dynamic-security` plugin, providing per-crop ACL tenant isolation, TLS on port 8883, and WebSocket transport on port 9001.
 
-[SmartPot-API](https://github.com/SmartPotTech/SmartPot-API) es la única cuenta administradora: al crear un cultivo
-registra en el broker las credenciales de su dispositivo, y al borrarlo las elimina. Un cultivo real las usa en su
-ESP32 (físico o en Wokwi); uno virtual, a través del simulador.
-
-## Estructura del Proyecto
+## Project Structure
 
 ```text
 SmartPot-Broker/
@@ -105,7 +97,7 @@ Abre http://localhost:5173 e ingresa con `demo@smartpot.app` / `SmartPot2026`. S
 `docker compose -p smartpot-demo down` (con `-v` borra también los datos). Más detalle en la
 [demo](https://github.com/SmartPotTech/.github/tree/main/docker/demo).
 
-### Requisitos Previos
+### Prerequisites
 
 - Docker (Docker Desktop o Docker Engine con Compose v2)
 
@@ -169,6 +161,6 @@ plataforma completa en una sola imagen ampliable:
 - [Máquinas de estado](https://github.com/SmartPotTech/.github/blob/main/docs/diagrams/SmartPot_Global_05_State_Machines.svg):
   los estados de la cuenta MQTT de un dispositivo
 
-## Licencia
+## License
 
 Este proyecto está bajo la licencia MIT. Consulta el archivo [LICENSE](LICENSE) para más detalles.
