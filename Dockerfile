@@ -1,4 +1,4 @@
-FROM eclipse-mosquitto:2.1.2-alpine
+FROM eclipse-mosquitto:2.1.4-alpine
 
 LABEL org.opencontainers.image.title="SmartPot Broker" \
       org.opencontainers.image.description="Broker MQTT de SmartPot con seguridad dinámica por dispositivo" \
